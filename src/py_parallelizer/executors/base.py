@@ -12,11 +12,7 @@ logger = setup_logger(__name__)
 
 
 class BaseParallelExecutor(ABC):
-    """
-    Abstract base class for parallel execution strategies.
-
-    Handles common setup like argument formatting, worker count, and progress bar.
-    """
+    """Abstract base class for parallel execution strategies."""
 
     def __init__(
         self,
@@ -32,28 +28,16 @@ class BaseParallelExecutor(ABC):
         self.pbar = None
         self.pbar_color = pbar_color
         self.pbar_desc: str = "Running code concurrently"
-        logger.debug(f"{self.__class__.__name__} processing [{func.__name__}] using [{self.n_workers}] workers...")
+        logger.debug(
+            "%s processing [%s] using [%s] workers...",
+            self.__class__.__name__,
+            func.__name__,
+            self.n_workers,
+        )
 
     @staticmethod
     def _format_args(**kwargs) -> list[dict]:
-        """
-        Convert keyword arguments into a list of dicts for each task.
-
-        Parameters
-        ----------
-        **kwargs
-            Keyword arguments where each value is an iterable of the same length.
-
-        Returns
-        -------
-        list[dict]
-            List of dictionaries, one for each task.
-
-        Raises
-        ------
-        ValueError
-            If the iterables have different lengths.
-        """
+        """Convert keyword arguments into a list of dicts for each task."""
         if not kwargs:
             return []
         kwds = []
@@ -63,7 +47,6 @@ class BaseParallelExecutor(ABC):
         return kwds
 
     def init_pbar(self, total: int) -> None:
-        """Initialize the progress bar if verbose."""
         if self.verbose:
             self.pbar = tqdm(
                 desc=self.pbar_desc,
@@ -84,27 +67,13 @@ class BaseParallelExecutor(ABC):
 
     @abstractmethod
     def execute(self, **kwargs) -> tuple[list, bool]:
-        """
-        Execute the parallel processing.
-
-        Parameters
-        ----------
-        **kwargs
-            Keyword arguments where each value is an iterable of the same length.
-
-        Returns
-        -------
-        tuple[list, bool]
-            (results, interrupted) - Results in input order, and whether interrupted.
-        """
+        """Execute the parallel processing, returns (results, interrupted)."""
         pass
 
     @abstractmethod
     def _cleanup_on_interrupt(self) -> None:
-        """Clean up resources on interrupt."""
         pass
 
     @abstractmethod
     def _cleanup_on_done(self) -> None:
-        """Clean up resources when done."""
         pass

@@ -10,7 +10,11 @@ __version__ = "1.0.2"
 from py_parallelizer.executor import ParallelExecutor
 from py_parallelizer.executors.multiprocess import MultiprocessExecutor
 from py_parallelizer.executors.threader import ThreadedExecutor
-from py_parallelizer.utils.input_parsing import create_batch_kwargs, create_batches, flatten_results
+from py_parallelizer.utils.input_parsing import (
+    create_batch_kwargs,
+    create_batches,
+    flatten_results,
+)
 
 __all__ = [
     "ParallelExecutor",

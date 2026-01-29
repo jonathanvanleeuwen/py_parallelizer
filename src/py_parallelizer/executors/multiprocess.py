@@ -10,7 +10,6 @@ from py_parallelizer.executors.base import BaseParallelExecutor
 from py_parallelizer.utils.logging import setup_logger
 
 logger = setup_logger(__name__)
-# logger.setLevel("DEBUG")
 
 
 class MultiprocessExecutor(BaseParallelExecutor):
@@ -36,22 +35,25 @@ class MultiprocessExecutor(BaseParallelExecutor):
 
     @staticmethod
     def _init_worker() -> None:
-        """Initialize worker process to ignore SIGINT."""
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     def execute(self, **kwargs) -> tuple[list, bool]:
-        """Execute tasks using process pool."""
         keywordargs = self._format_args(**kwargs)
         total_jobs = len(keywordargs)
         self.init_pbar(total=total_jobs)
-        logger.debug(f"Creating process pool with {self.n_workers} workers for {total_jobs} jobs")
+        logger.debug(
+            "Creating process pool with %s workers for %s jobs",
+            self.n_workers,
+            total_jobs,
+        )
 
-        # Pre-allocate results array to collect partial results on interrupt
         self.processes = []
         self.results = [None] * total_jobs
         logger.debug("Submitting tasks to process pool")
-        self.processes = [self.pool.apply_async(self.func, kwds=kwds) for kwds in keywordargs]
-        logger.debug(f"Submitted {len(self.processes)} tasks")
+        self.processes = [
+            self.pool.apply_async(self.func, kwds=kwds) for kwds in keywordargs
+        ]
+        logger.debug("Submitted %s tasks", len(self.processes))
         try:
             self._collect_results()
         except KeyboardInterrupt:
@@ -60,13 +62,12 @@ class MultiprocessExecutor(BaseParallelExecutor):
             self._cleanup_on_done()
         self.pbar_close()
         logger.debug(
-            f"Multiprocess execution done: "
-            f"{len([result for result in self.results if result is not None])} results collected"
+            "Multiprocess execution done: %s results collected",
+            len([r for r in self.results if r is not None]),
         )
         return self.results, self.interrupt
 
     def _collect_ready_results(self) -> None:
-        """Collect results from any processes that have already finished."""
         for proc_idx, process in enumerate(self.processes):
             if process and process.ready():
                 try:
@@ -74,10 +75,9 @@ class MultiprocessExecutor(BaseParallelExecutor):
                     self.processes[proc_idx] = None
                     self.pbar_update()
                 except Exception:
-                    pass  # Process may have failed, leave as None
+                    pass
 
     def _collect_results(self) -> None:
-        """Collect results from worker processes, maintaining order."""
         logger.debug("Starting result collection from processes")
         finished = False
         while not finished:
@@ -86,10 +86,9 @@ class MultiprocessExecutor(BaseParallelExecutor):
                 finished = True
             else:
                 time.sleep(0.3)
-        logger.debug(f"Process result collection complete")
+        logger.debug("Process result collection complete")
 
     def _cleanup_on_interrupt(self) -> None:
-        """Clean up resources on keyboard interrupt."""
         logger.warning("Caught KeyboardInterrupt, collecting completed results...")
         self._collect_ready_results()
         self.interrupt = True
@@ -100,12 +99,10 @@ class MultiprocessExecutor(BaseParallelExecutor):
         logger.warning("Caught KeyboardInterrupt, Exiting...")
 
     def _cleanup_on_done(self) -> None:
-        """Clean up resources when done."""
         self._clean_pool(how="close")
         logger.debug("Cleanup on done complete")
 
     def _clean_pool(self, how: Literal["close", "terminate"]) -> None:
-        """Clean up the process pool."""
         if self.pool:
             if how == "terminate":
                 logger.debug("Terminating process pool")

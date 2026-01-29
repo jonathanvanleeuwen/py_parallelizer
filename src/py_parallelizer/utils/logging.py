@@ -6,12 +6,7 @@ from tqdm import tqdm
 
 
 class TqdmLoggingHandler(logging.Handler):
-    """
-    Logging handler that works with tqdm progress bars.
-
-    This handler ensures that log messages are written using tqdm.write()
-    so they don't interfere with progress bar display.
-    """
+    """Logging handler that writes messages via tqdm.write() to avoid progress bar interference."""
 
     def __init__(self, level: int = logging.NOTSET):
         super().__init__(level)
@@ -28,21 +23,8 @@ class TqdmLoggingHandler(logging.Handler):
 
 
 def setup_logger(name: str) -> logging.Logger:
-    """
-    Set up a logger with the TqdmLoggingHandler.
-
-    Parameters
-    ----------
-    name : str
-        The name of the logger (typically __name__).
-
-    Returns
-    -------
-    logging.Logger
-        Configured logger instance.
-    """
+    """Set up a logger with TqdmLoggingHandler."""
     logger = logging.getLogger(name)
-    # Only add handler if not already present
     if not any(isinstance(h, TqdmLoggingHandler) for h in logger.handlers):
         logger.addHandler(TqdmLoggingHandler())
     return logger
