@@ -137,4 +137,5 @@ When committing use the following format for your commit message:
 
 # Coverage report
 <!-- Pytest Coverage Comment:Begin -->
+<a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/README.md"><img alt="Coverage" src="https://img.shields.io/badge/Coverage-86%25-green.svg" /></a><details><summary>Coverage Report </summary><table><tr><th>File</th><th>Stmts</th><th>Miss</th><th>Cover</th><th>Missing</th></tr><tbody><tr><td colspan="5"><b>src/py_parallelizer</b></td></tr><tr><td>&nbsp; &nbsp;<a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/basic_function.py">basic_function.py</a></td><td>6</td><td>1</td><td>83%</td><td><a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/basic_function.py#L10">10</a></td></tr><tr><td><b>TOTAL</b></td><td><b>7</b></td><td><b>1</b></td><td><b>86%</b></td><td>&nbsp;</td></tr></tbody></table></details>
 <!-- Pytest Coverage Comment:End -->
