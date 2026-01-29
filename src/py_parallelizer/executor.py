@@ -1,6 +1,6 @@
 """Public API for parallel execution."""
 
-from typing import Callable
+from collections.abc import Callable
 
 from py_parallelizer.executors.multiprocess import MultiprocessExecutor
 from py_parallelizer.executors.threaded import ThreadedExecutor

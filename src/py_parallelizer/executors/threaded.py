@@ -1,8 +1,8 @@
 """Threading-based parallel executor implementation."""
 
 import threading
+from collections.abc import Callable
 from queue import Queue
-from typing import Callable
 
 from tqdm import tqdm
 
@@ -37,7 +37,9 @@ class ThreadWorker(BaseWorker):
         while True:
             item = self.task_queue.get()
             if item is None or self.stop_event.is_set():
-                logger.debug(f"[{thread_name}] Worker stopping (processed {tasks_processed} tasks)")
+                logger.debug(
+                    f"[{thread_name}] Worker stopping (processed {tasks_processed} tasks)"
+                )
                 self.results_queue.put("DONE")
                 break
             try:
@@ -80,7 +82,9 @@ class ThreadedExecutor(BaseParallelExecutor):
 
     def execute(self) -> tuple[list, bool]:
         """Execute tasks using thread pool."""
-        logger.debug(f"Starting {self.n_workers} worker threads for {len(self.keywordargs)} tasks")
+        logger.debug(
+            f"Starting {self.n_workers} worker threads for {len(self.keywordargs)} tasks"
+        )
 
         # Create and start worker threads
         for _ in range(self.n_workers):
@@ -143,7 +147,9 @@ class ThreadedExecutor(BaseParallelExecutor):
                 result = self.results_queue.get()
                 if isinstance(result, str) and result == "DONE":
                     finished_workers += 1
-                    logger.debug(f"Worker finished ({finished_workers}/{self.n_workers})")
+                    logger.debug(
+                        f"Worker finished ({finished_workers}/{self.n_workers})"
+                    )
                 else:
                     idx, value = result
                     results[idx] = self._apply_results_func(value)

@@ -1,7 +1,7 @@
 """Base classes for parallel execution strategies."""
 
 from abc import ABC, abstractmethod
-from typing import Callable
+from collections.abc import Callable
 
 import psutil
 from tqdm import tqdm
@@ -55,10 +55,7 @@ class BaseParallelExecutor(ABC):
         else:
             self.pbar = None
 
-        logger.debug(
-            f"{self.__class__.__name__} processing [{func.__name__}] "
-            f"using [{self.n_workers}] workers..."
-        )
+        logger.debug(f"{self.__class__.__name__} processing [{func.__name__}] using [{self.n_workers}] workers...")
 
     @staticmethod
     def _get_worker_count(n_workers: int | None) -> int:

@@ -3,7 +3,7 @@
 import multiprocessing as mp
 import signal
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from py_parallelizer.base import BaseParallelExecutor
 from py_parallelizer.logging_utils import setup_logger
@@ -109,7 +109,9 @@ class MultiprocessExecutor(BaseParallelExecutor):
                         ready_count += 1
             if ready_count > 0:
                 completed = len([r for r in self.results if r is not None])
-                logger.debug(f"Collected {ready_count} results (total: {completed}/{len(self.results)})")
+                logger.debug(
+                    f"Collected {ready_count} results (total: {completed}/{len(self.results)})"
+                )
             if not [proc for proc in self.processes if proc]:
                 finished = True
             else:

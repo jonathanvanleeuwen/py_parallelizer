@@ -99,7 +99,9 @@ class TestSetupLogger:
         """Test that setup_logger adds TqdmLoggingHandler."""
         # Use unique name to avoid conflicts with other tests
         logger = setup_logger("test_module_unique_handler")
-        has_tqdm_handler = any(isinstance(h, TqdmLoggingHandler) for h in logger.handlers)
+        has_tqdm_handler = any(
+            isinstance(h, TqdmLoggingHandler) for h in logger.handlers
+        )
         assert has_tqdm_handler
 
     def test_setup_logger_does_not_duplicate_handlers(self):
@@ -115,5 +117,7 @@ class TestSetupLogger:
         setup_logger(logger_name)
 
         logger = logging.getLogger(logger_name)
-        tqdm_handlers = [h for h in logger.handlers if isinstance(h, TqdmLoggingHandler)]
+        tqdm_handlers = [
+            h for h in logger.handlers if isinstance(h, TqdmLoggingHandler)
+        ]
         assert len(tqdm_handlers) == 1

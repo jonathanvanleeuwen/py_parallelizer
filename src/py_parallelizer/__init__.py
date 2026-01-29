@@ -12,6 +12,7 @@ from py_parallelizer.executor import ParallelExecutor
 from py_parallelizer.executors.multiprocess import MultiprocessExecutor
 from py_parallelizer.executors.threaded import ThreadedExecutor, ThreadWorker
 from py_parallelizer.logging_utils import TqdmLoggingHandler, setup_logger
+from py_parallelizer.utils import create_batch_kwargs, create_batches, flatten_results
 
 __all__ = [
     "ParallelExecutor",
@@ -22,4 +23,7 @@ __all__ = [
     "BaseParallelExecutor",
     "TqdmLoggingHandler",
     "setup_logger",
+    "create_batches",
+    "flatten_results",
+    "create_batch_kwargs",
 ]
