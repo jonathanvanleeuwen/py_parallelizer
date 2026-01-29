@@ -55,7 +55,9 @@ class BaseParallelExecutor(ABC):
         else:
             self.pbar = None
 
-        logger.debug(f"{self.__class__.__name__} processing [{func.__name__}] using [{self.n_workers}] workers...")
+        logger.debug(
+            f"{self.__class__.__name__} processing [{func.__name__}] using [{self.n_workers}] workers..."
+        )
 
     @staticmethod
     def _get_worker_count(n_workers: int | None) -> int:
@@ -63,7 +65,9 @@ class BaseParallelExecutor(ABC):
         if n_workers is None:
             cpu_count = psutil.cpu_count()
             n_workers = max(cpu_count - 1, 1)
-            logger.debug(f"Auto-detected worker count: {n_workers} (CPU count: {cpu_count})")
+            logger.debug(
+                f"Auto-detected worker count: {n_workers} (CPU count: {cpu_count})"
+            )
         return int(n_workers)
 
     @staticmethod

@@ -3,12 +3,12 @@
 * Semantic release using github actions
 * Automatic code coverage report in README
 
-*Notes*  
-Workflows trigger when a branch is merged into main!  
-To install, please follow all the instructions in this readme.  
-The workflows require a PAT set as secret (see further down for instructions)  
-See the notes on how to create semantic releases at the bottom of the README.     
-  
+*Notes*
+Workflows trigger when a branch is merged into main!
+To install, please follow all the instructions in this readme.
+The workflows require a PAT set as secret (see further down for instructions)
+See the notes on how to create semantic releases at the bottom of the README.
+
 If you followed all the steps, whenever a PR is merged into `main`, the workflows are triggered and should:
 * Ensure that tests pass (before merge)
 * Create a code coveraeg report and commit that to the bottom of the README
@@ -33,7 +33,7 @@ Cookiecutter template:
 
 ## Turn the new local cookiecutter code into a git repo
 
-Open git bash 
+Open git bash
 ```bash
 cd C:/your/code/directory
 ```
