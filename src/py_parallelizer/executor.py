@@ -3,7 +3,7 @@
 from collections.abc import Callable
 
 from py_parallelizer.executors.multiprocess import MultiprocessExecutor
-from py_parallelizer.executors.threaded import ThreadedExecutor
+from py_parallelizer.executors.threader import ThreadedExecutor
 
 
 class ParallelExecutor:
@@ -47,7 +47,6 @@ class ParallelExecutor:
         self,
         func: Callable,
         n_workers: int | None = None,
-        results_func: Callable | None = None,
         verbose: bool = True,
     ):
         """
@@ -66,7 +65,6 @@ class ParallelExecutor:
         """
         self.func = func
         self.n_workers = n_workers
-        self.results_func = results_func
         self.verbose = verbose
 
     def run_threaded(self, **kwargs) -> tuple[list, bool]:
@@ -93,7 +91,6 @@ class ParallelExecutor:
         executor = ThreadedExecutor(
             func=self.func,
             n_workers=self.n_workers,
-            results_func=self.results_func,
             verbose=self.verbose,
             **kwargs,
         )
@@ -128,7 +125,6 @@ class ParallelExecutor:
         executor = MultiprocessExecutor(
             func=self.func,
             n_workers=self.n_workers,
-            results_func=self.results_func,
             verbose=self.verbose,
             **kwargs,
         )
