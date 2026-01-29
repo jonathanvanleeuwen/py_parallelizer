@@ -5,7 +5,7 @@ This package provides a unified interface for parallel execution using
 either threads (for I/O-bound tasks) or processes (for CPU-bound tasks).
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 from py_parallelizer.base import BaseParallelExecutor, BaseWorker
 from py_parallelizer.executor import ParallelExecutor
