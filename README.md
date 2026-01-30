@@ -2,6 +2,40 @@
 
 A simple, flexible Python library for parallel execution using threading or multiprocessing.
 
+## Table of Contents
+
+- [py\_parallelizer](#py_parallelizer)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+    - [Option 1: Install from Wheel File (Recommended)](#option-1-install-from-wheel-file-recommended)
+    - [Option 2: Install from Source (Clone Repository)](#option-2-install-from-source-clone-repository)
+    - [Using uv (recommended)](#using-uv-recommended)
+    - [Building a Wheel File](#building-a-wheel-file)
+  - [Quick Start](#quick-start)
+  - [When to Use What](#when-to-use-what)
+  - [Usage Guide](#usage-guide)
+    - [Threading (I/O-bound tasks)](#threading-io-bound-tasks)
+    - [Multiprocessing (CPU-bound tasks)](#multiprocessing-cpu-bound-tasks)
+    - [Multiple Arguments](#multiple-arguments)
+    - [Handling Interrupts](#handling-interrupts)
+    - [Sequential Parallelism (Threaded then Multiprocess)](#sequential-parallelism-threaded-then-multiprocess)
+    - [Nested Parallelism (Threading WITHIN Multiprocessing)](#nested-parallelism-threading-within-multiprocessing)
+  - [Batch Utilities](#batch-utilities)
+  - [Common Pitfalls](#common-pitfalls)
+    - [1. Using multiprocessing for I/O-bound tasks](#1-using-multiprocessing-for-io-bound-tasks)
+    - [2. Lambda functions with multiprocessing](#2-lambda-functions-with-multiprocessing)
+    - [3. Missing `if __name__ == "__main__":` guard](#3-missing-if-__name__--__main__-guard)
+    - [4. Too many workers](#4-too-many-workers)
+    - [5. Forgetting that multiprocessing copies data](#5-forgetting-that-multiprocessing-copies-data)
+    - [6. Not handling exceptions](#6-not-handling-exceptions)
+    - [7. Passing arguments with wrong names](#7-passing-arguments-with-wrong-names)
+  - [API Reference](#api-reference)
+    - [ThreadedExecutor](#threadedexecutor)
+    - [MultiprocessExecutor](#multiprocessexecutor)
+    - [ParallelExecutor](#parallelexecutor)
+  - [Coverage Report](#coverage-report)
+
 ## Features
 
 - **ThreadedExecutor**: Run tasks in parallel using threads (best for I/O-bound tasks)
