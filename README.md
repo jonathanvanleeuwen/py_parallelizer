@@ -1,141 +1,487 @@
 # py_parallelizer
-* Automated testing on PR using github actions
-* Semantic release using github actions
-* Automatic code coverage report in README
 
-*Notes*
-Workflows trigger when a branch is merged into main!
-To install, please follow all the instructions in this readme.
-The workflows require a PAT set as secret (see further down for instructions)
-See the notes on how to create semantic releases at the bottom of the README.
+A simple, flexible Python library for parallel execution using threading or multiprocessing.
 
-If you followed all the steps, whenever a PR is merged into `main`, the workflows are triggered and should:
-* Ensure that tests pass (before merge)
-* Create a code coveraeg report and commit that to the bottom of the README
-* Create a semantic release (if you follow the semantic release pattern) and automatically update the version number of your code.
+## Table of Contents
 
+- [py\_parallelizer](#py_parallelizer)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+    - [Option 1: Install from Wheel File (Recommended)](#option-1-install-from-wheel-file-recommended)
+    - [Option 2: Install from Source (Clone Repository)](#option-2-install-from-source-clone-repository)
+    - [Using uv (recommended)](#using-uv-recommended)
+    - [Building a Wheel File](#building-a-wheel-file)
+  - [Quick Start](#quick-start)
+  - [When to Use What](#when-to-use-what)
+  - [Usage Guide](#usage-guide)
+    - [Threading (I/O-bound tasks)](#threading-io-bound-tasks)
+    - [Multiprocessing (CPU-bound tasks)](#multiprocessing-cpu-bound-tasks)
+    - [Multiple Arguments](#multiple-arguments)
+    - [Handling Interrupts](#handling-interrupts)
+    - [Sequential Parallelism (Threaded then Multiprocess)](#sequential-parallelism-threaded-then-multiprocess)
+    - [Nested Parallelism (Threading WITHIN Multiprocessing)](#nested-parallelism-threading-within-multiprocessing)
+  - [Batch Utilities](#batch-utilities)
+  - [Common Pitfalls](#common-pitfalls)
+    - [1. Using multiprocessing for I/O-bound tasks](#1-using-multiprocessing-for-io-bound-tasks)
+    - [2. Lambda functions with multiprocessing](#2-lambda-functions-with-multiprocessing)
+    - [3. Missing `if __name__ == "__main__":` guard](#3-missing-if-__name__--__main__-guard)
+    - [4. Too many workers](#4-too-many-workers)
+    - [5. Forgetting that multiprocessing copies data](#5-forgetting-that-multiprocessing-copies-data)
+    - [6. Not handling exceptions](#6-not-handling-exceptions)
+    - [7. Passing arguments with wrong names](#7-passing-arguments-with-wrong-names)
+  - [API Reference](#api-reference)
+    - [ThreadedExecutor](#threadedexecutor)
+    - [MultiprocessExecutor](#multiprocessexecutor)
+    - [ParallelExecutor](#parallelexecutor)
+  - [Coverage Report](#coverage-report)
 
-# Install
-Cookiecutter template:
-* Cd to your new libary location
-  * `cd /your/new/library/path/`
-* Install cookiecutter using pip
-  * `pip install cookiecutter`
-* Run the cookiecutter template from this github repo
-  * `cookiecutter https://github.com/jonathanvanleeuwen/lib_template`
-* Fill in your new library values
-* Create new virtual environment
-  *  `python -m venv .venv_repo_name`
-* Install libary
-  *  `pip install -e .`
-* Check proper install by running tests
-  * `pytest`
+## Features
 
-## Turn the new local cookiecutter code into a git repo
+- **ThreadedExecutor**: Run tasks in parallel using threads (best for I/O-bound tasks)
+- **MultiprocessExecutor**: Run tasks in parallel using processes (best for CPU-bound tasks)
+- **ParallelExecutor**: Unified API that can switch between threading and multiprocessing
+- **Progress bars**: Built-in tqdm progress tracking
+- **Graceful interrupts**: Ctrl+C returns partial results instead of crashing
+- **Batch utilities**: Helper functions for chunking data
 
-Open git bash
+## Installation
+
+This package is not published to PyPI. You can install it by either cloning the repository or downloading the wheel file.
+
+### Option 1: Install from Wheel File (Recommended)
+
+Download the latest wheel file from the [releases](https://github.com/jonathanvanleeuwen/py_parallelizer/releases) or from the `dist/` directory:
+
 ```bash
-cd C:/your/code/directory
+# Install a specific version (include the path to the wheel file)
+pip install dist/py_parallelizer-1.0.2-py3-none-any.whl
+
+# Or using uv
+uv pip install dist/py_parallelizer-1.0.2-py3-none-any.whl
 ```
-To init the repository, add all files and commit
+
+> **Note:** Replace `dist/` with the actual path where you downloaded the wheel file, and update the version number as needed.
+
+### Option 2: Install from Source (Clone Repository)
+
 ```bash
-git init
-git add *
-git add .github
-git add .gitignore
-git commit -m "fix: Inital commit"
+# Clone the repository
+git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
+cd py_parallelizer
+
+# Install using pip
+pip install .
+
+# Or install in editable/development mode
+pip install -e ".[dev]"
 ```
 
-To add the new git repository to your github, -
-*  Go to [github](https://github.com/).
--  Log in to your account.
--  Click the [new repository](https://github.com/new) button in the top-right. You’ll have an option there to initialize the repository with a README file, but don’t. Leave the repo empty
-- Give the new repo the same name you gave your repo with the cookiecutter
--  Click the “Create repository” button.
+### Using uv (recommended)
 
-Now we want to make sure we are using `main` as main branch name and push the code to github
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager. To use it:
+
 ```bash
-git remote add origin https://github.com/username/new_repo_name.git
-git branch -M main
-git push -u origin main
+# Install uv (if not already installed)
+pip install uv
+
+# Clone and enter the repository
+git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
+cd py_parallelizer
+
+# Create a virtual environment
+uv venv .venv
+
+# Activate the virtual environment
+# On Windows:
+.venv\Scripts\activate
+# On Unix/macOS:
+source .venv/bin/activate
+
+# Install the package
+uv pip install .
+
+# Or install with dev dependencies
+uv pip install -e ".[dev]"
 ```
 
-# Protect your main branch
-To ensure that only accepted code is put on main, make sure that all changes to main happen using a PR and at least 1
-reviewer.
-You also want to ensure that no tests are allowed to fail when merging
+### Building a Wheel File
 
-## Branch Protection
-### Ensure branch protection for PRs
-In the repo on github go to:
-* Settings -> Branches and click "add rule"
-* Enable:
-  * Require a pull request before merging
-    * Require approvals (set the number of required reviewers)
-  * Require status checks to pass before merging
-    * Require branches to be up to date before merging
-  * Require conversation resolution before merging
+If you want to build a wheel file yourself:
 
-### Ensure workflow protection
-this is not entirely fool proof and secure, but better than nothing, in the repo on github go to:
-* Settings -> Actions -> General
-* Enable:
-  * Allow [owner], and select non-[owner], actions and reusable workflows
-* In "Allow specified actions and reusable workflows" add the following string:
-  * actions/checkout@v2,
-actions/setup-python@v3,
-relekang/python-semantic-release@master,
-MishaKav/pytest-coverage-comment@main,
-actions-js/push@master,
+```bash
+# Using uv
+uv build
 
-## Create a semantic release PAT and Secrets for the workflow actions
-For the semantic release to be able to push new version to the protected branch you need to
-create a PAT with the proper permissions and save the pat as a secret in the repo.
+# Or using pip/build
+pip install build
+python -m build
 
-### Create PAT
-* Click Top right image -> settings
-* Developer settings
-* Personal access tokens -> Tokens (classic)
-* Generate new token -> generate new token (classic)
+# The wheel will be created in the dist/ directory
+```
 
-Settings:
-* Note: Semantic release
-* Enable:
-  * Repo (and all the repo options)
-  * workflow
-  * admin:repo_hook
-* Generate token
+## Quick Start
 
-Now copy the token (you need this in the next step)
+```python
+from py_parallelizer import ParallelExecutor
 
-### Create secret
-Go to your repo, then:
-* Settings -> Secrets -> Actions
-* New repository secret
-  * Name: SEM_RELEASE
-  * Secret: [Your copied PAT token]
+def process_item(x, multiplier=2):
+    return x * multiplier
 
-The name needs to be the same, as this is wat is used in ".github\workflows\semantic-release.yml"
+# Simple usage - pass the function to the constructor
+executor = ParallelExecutor(process_item)
+results, interrupted = executor.run_threaded(x=[1, 2, 3, 4, 5])
+print(results)  # [2, 4, 6, 8, 10]
 
+# With extra kwargs - ALL arguments must be lists of the same length
+results, interrupted = executor.run_threaded(
+    x=[1, 2, 3],
+    multiplier=[10, 10, 10]
+)
+print(results)  # [10, 20, 30]
+```
 
-# Semantic release
-https://python-semantic-release.readthedocs.io/en/latest/
+**Important:**
+- The `execute()` and `run_*` methods return a tuple of `(results, interrupted)` where `interrupted` is a boolean indicating if execution was interrupted (e.g., by Ctrl+C).
+- When using `run_multiprocess()`, you **must** wrap your code in `if __name__ == "__main__":` to prevent infinite process spawning. See [Multiprocessing](#multiprocessing-cpu-bound-tasks) section.
 
-The workflows are triggered when you merge into main!!
+## When to Use What
 
-When committing use the following format for your commit message:
-* patch:
-  `fix: commit message`
-* minor:
-  `feat: commit message`
-* major/breaking (add the breaking change on the third  line of the message):
-    ```
-    feat: commit message
+| Scenario | Use | Why |
+|----------|-----|-----|
+| API calls, file I/O, web scraping | `ThreadedExecutor` or `run_threaded` | I/O-bound; threads release GIL while waiting |
+| Heavy computation, data processing | `MultiprocessExecutor` or `run_multiprocess` | CPU-bound; bypasses GIL with separate processes |
+| Mixed workloads | Nested parallelism | See example below |
 
-    BREAKING CHANGE: commit message
-    ```
+## Usage Guide
 
-# Coverage report
+### Threading (I/O-bound tasks)
+
+```python
+from py_parallelizer import ThreadedExecutor
+
+def fetch_url(url, timeout=30):
+    import requests
+    return requests.get(url, timeout=timeout).status_code
+
+# Pass the function to the constructor
+executor = ThreadedExecutor(func=fetch_url, n_workers=10, verbose=True)
+urls = ["https://example.com", "https://google.com", "https://github.com"]
+
+# All arguments must be lists of the same length
+results, interrupted = executor.execute(
+    url=urls,
+    timeout=[10, 10, 10]  # One timeout per URL
+)
+```
+
+### Multiprocessing (CPU-bound tasks)
+
+**Important:** When using multiprocessing, you must:
+1. Use a named function (not a lambda) - functions must be picklable
+2. Place your execution code inside `if __name__ == "__main__":` guard
+
+The `if __name__ == "__main__":` guard is required because multiprocessing spawns new processes that re-import your module. Without this guard, the code at the top level would execute in each spawned process, causing infinite recursion and unwanted behavior.
+
+```python
+from py_parallelizer import MultiprocessExecutor
+
+def heavy_computation(n):
+    return sum(i * i for i in range(n))
+
+# REQUIRED: All multiprocessing code must be inside this guard
+if __name__ == "__main__":
+    # Pass the function to the constructor
+    executor = MultiprocessExecutor(func=heavy_computation, n_workers=4, verbose=True)
+
+    # All arguments must be lists of the same length
+    results, interrupted = executor.execute(n=[100000, 200000, 300000])
+    print(results)
+```
+
+### Multiple Arguments
+
+All arguments to the function must be passed as lists of the same length:
+
+```python
+from py_parallelizer import ParallelExecutor
+
+def process(a, b, constant="default"):
+    return f"{a}-{b}-{constant}"
+
+# Pass the function to the constructor
+executor = ParallelExecutor(process, verbose=False)
+
+# All arguments are lists - each index forms one function call
+results, interrupted = executor.run_threaded(
+    a=[1, 2, 3],
+    b=["x", "y", "z"],
+    constant=["shared", "shared", "shared"]  # Must also be a list!
+)
+# Results: ["1-x-shared", "2-y-shared", "3-z-shared"]
+```
+
+### Handling Interrupts
+
+Both executors handle Ctrl+C gracefully and return partial results:
+
+```python
+from py_parallelizer import ThreadedExecutor
+import time
+
+def slow_task(x):
+    time.sleep(1)
+    return x * 2
+
+executor = ThreadedExecutor(func=slow_task, n_workers=2)
+
+# If you press Ctrl+C during execution:
+# - Workers stop gracefully
+# - Already-completed results are returned
+# - No crash or traceback spam
+results, interrupted = executor.execute(x=list(range(100)))
+
+if interrupted:
+    print(f"Execution was interrupted! Got {len([r for r in results if r is not None])} results")
+else:
+    print(f"Completed all {len(results)} tasks")
+```
+
+### Sequential Parallelism (Threaded then Multiprocess)
+
+For workflows where you first gather data (I/O-bound) then process it (CPU-bound), run them sequentially:
+
+```python
+from py_parallelizer import ThreadedExecutor, MultiprocessExecutor
+
+def fetch_data(url):
+    """I/O-bound: fetch from API"""
+    import requests
+    return requests.get(url).json()
+
+def process_data(data):
+    """CPU-bound: heavy processing"""
+    return expensive_computation(data)
+
+if __name__ == "__main__":
+    urls = ["https://api.example.com/1", "https://api.example.com/2"]
+
+    # Step 1: Fetch all data in parallel using threads (I/O-bound)
+    thread_executor = ThreadedExecutor(func=fetch_data, n_workers=10)
+    raw_data, _ = thread_executor.execute(url=urls)
+
+    # Step 2: Process all data in parallel using multiprocessing (CPU-bound)
+    process_executor = MultiprocessExecutor(func=process_data, n_workers=4)
+    results, _ = process_executor.execute(data=raw_data)
+```
+
+### Nested Parallelism (Threading WITHIN Multiprocessing)
+
+For maximum parallelism, run threads **inside** each process. This is useful when each task involves both I/O and CPU work. Use `create_batches` to split work across processes, and each process runs threads internally:
+
+```python
+from py_parallelizer import ParallelExecutor, create_batches, flatten_results
+
+def process_item(item, multiplier):
+    """Individual item processing (runs in a thread)"""
+    # Could include I/O operations here
+    return item * multiplier
+
+def process_batch(batch_items: list, batch_multipliers: list) -> list:
+    """Process a batch of items using threads (runs in a separate process)"""
+    results, _ = ParallelExecutor(
+        process_item, n_workers=4, verbose=False
+    ).run_threaded(item=batch_items, multiplier=batch_multipliers)
+    return results
+
+if __name__ == "__main__":
+    # All items to process
+    all_items = list(range(100))
+    all_multipliers = [2] * len(all_items)
+    n_processes = 4
+
+    # Split into batches - one batch per process
+    item_batches = create_batches(all_items, n_batches=n_processes)
+    multiplier_batches = create_batches(all_multipliers, n_batches=n_processes)
+
+    # Each process receives a batch and spawns threads internally
+    batch_results, _ = ParallelExecutor(
+        process_batch, n_workers=n_processes, verbose=True
+    ).run_multiprocess(
+        batch_items=item_batches,
+        batch_multipliers=multiplier_batches
+    )
+
+    # Flatten the nested results from each process
+    final_results = flatten_results(batch_results)
+    print(f"Processed {len(final_results)} items")  # 100 items
+```
+
+This pattern gives you:
+- **n_processes** separate Python processes (bypassing the GIL)
+- **n_workers** threads per process for concurrent I/O
+- Automatic batching and result flattening
+
+## Batch Utilities
+
+Helper functions for splitting data and combining results:
+
+```python
+from py_parallelizer import create_batches, flatten_results, create_batch_kwargs
+
+# Split items into n_batches for distributing across processes
+items = list(range(100))
+batches = create_batches(items, n_batches=4)  # 4 batches of 25 items each
+# [[0-24], [25-49], [50-74], [75-99]]
+
+# Flatten nested results (e.g., after nested parallelism)
+nested = [[1, 2], [3, 4], [5, 6]]
+flat = flatten_results(nested)  # [1, 2, 3, 4, 5, 6]
+
+# Split multiple kwargs into batches (keeps arguments aligned)
+batch_kwargs_list = create_batch_kwargs(
+    kwargs={'x': [1, 2, 3, 4], 'y': ['a', 'b', 'c', 'd']},
+    n_batches=2
+)
+# [{'x': [1, 2], 'y': ['a', 'b']}, {'x': [3, 4], 'y': ['c', 'd']}]
+```
+
+## Common Pitfalls
+
+### 1. Using multiprocessing for I/O-bound tasks
+```python
+# ❌ Bad: Multiprocessing has overhead, threads are better for I/O
+executor = ParallelExecutor(fetch_url)
+results, _ = executor.run_multiprocess(url=urls)
+
+# ✅ Good: Use threads for I/O
+executor = ParallelExecutor(fetch_url)
+results, _ = executor.run_threaded(url=urls)
+```
+
+### 2. Lambda functions with multiprocessing
+```python
+# ❌ Bad: Lambdas can't be pickled
+executor = ParallelExecutor(lambda x: x * 2)
+executor.run_multiprocess(x=[1, 2, 3])  # Will fail!
+
+# ✅ Good: Use named functions
+def double(x):
+    return x * 2
+executor = ParallelExecutor(double)
+executor.run_multiprocess(x=[1, 2, 3])
+```
+
+### 3. Missing `if __name__ == "__main__":` guard
+```python
+# ❌ Bad: Code outside guard runs in every spawned process
+from py_parallelizer import ParallelExecutor
+
+def double(x):
+    return x * 2
+
+executor = ParallelExecutor(double)
+results, _ = executor.run_multiprocess(x=[1, 2, 3])  # Causes issues!
+
+# ✅ Good: Protect multiprocessing code with the guard
+from py_parallelizer import ParallelExecutor
+
+def double(x):
+    return x * 2
+
+if __name__ == "__main__":
+    executor = ParallelExecutor(double)
+    results, _ = executor.run_multiprocess(x=[1, 2, 3])
+```
+
+### 4. Too many workers
+```python
+# ❌ Bad: More processes than CPU cores wastes resources
+executor = MultiprocessExecutor(func=my_func, n_workers=100)
+
+# ✅ Good: Match CPU cores for CPU-bound work (or leave as None for auto-detect)
+import os
+executor = MultiprocessExecutor(func=my_func, n_workers=os.cpu_count())
+```
+
+### 5. Forgetting that multiprocessing copies data
+```python
+# ❌ Bad: Large objects get copied to each process
+huge_data = load_huge_dataset()
+def process(idx):
+    return huge_data[idx]  # huge_data copied to each process!
+
+# ✅ Good: Pass only what's needed
+def process(item):
+    return transform(item)
+
+if __name__ == "__main__":
+    executor = ParallelExecutor(process)
+    executor.run_multiprocess(item=huge_data)
+```
+
+### 6. Not handling exceptions
+```python
+# Results may contain None for failed items
+# Check your results or add try/except in your worker function
+def safe_process(x):
+    try:
+        return risky_operation(x)
+    except Exception as e:
+        return {"error": str(e), "item": x}
+```
+
+### 7. Passing arguments with wrong names
+```python
+# ❌ Bad: Using 'items' when function expects 'x'
+def double(x):
+    return x * 2
+
+executor = ParallelExecutor(double)
+results, _ = executor.run_threaded(items=[1, 2, 3])  # Error! 'items' is not a parameter
+
+# ✅ Good: Use the actual parameter name
+executor = ParallelExecutor(double)
+results, _ = executor.run_threaded(x=[1, 2, 3])  # Correct!
+```
+
+## API Reference
+
+### ThreadedExecutor
+```python
+ThreadedExecutor(func, n_workers=None, verbose=True)
+executor.execute(**kwargs) -> tuple[list, bool]
+```
+- `func`: The function to execute in parallel
+- `n_workers`: Number of threads (defaults to CPU count)
+- `verbose`: Show progress bar
+- `**kwargs`: Each keyword argument must be a list of the same length
+- Returns: `(results, interrupted)` tuple
+
+### MultiprocessExecutor
+```python
+MultiprocessExecutor(func, n_workers=None, verbose=True)
+executor.execute(**kwargs) -> tuple[list, bool]
+```
+- `func`: The function to execute in parallel (must be picklable)
+- `n_workers`: Number of processes (defaults to CPU count)
+- `verbose`: Show progress bar
+- `**kwargs`: Each keyword argument must be a list of the same length
+- Returns: `(results, interrupted)` tuple
+
+### ParallelExecutor
+```python
+ParallelExecutor(func, n_workers=None, verbose=True)
+executor.run_threaded(**kwargs) -> tuple[list, bool]
+executor.run_multiprocess(**kwargs) -> tuple[list, bool]
+```
+- `func`: The function to execute in parallel
+- `n_workers`: Number of workers (defaults to CPU count)
+- `verbose`: Show progress bar
+- `**kwargs`: Each keyword argument must be a list of the same length
+- Returns: `(results, interrupted)` tuple
+
+## Coverage Report
 <!-- Pytest Coverage Comment:Begin -->
 <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/README.md"><img alt="Coverage" src="https://img.shields.io/badge/Coverage-80%25-green.svg" /></a><details><summary>Coverage Report </summary><table><tr><th>File</th><th>Stmts</th><th>Miss</th><th>Cover</th><th>Missing</th></tr><tbody><tr><td colspan="5"><b>src/py_parallelizer</b></td></tr><tr><td>&nbsp; &nbsp;<a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/base.py">base.py</a></td><td>45</td><td>2</td><td>96%</td><td><a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/base.py#L20">20</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/base.py#L111">111</a></td></tr><tr><td>&nbsp; &nbsp;<a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/logging_utils.py">logging_utils.py</a></td><td>19</td><td>2</td><td>89%</td><td><a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/logging_utils.py#L26-L27">26&ndash;27</a></td></tr><tr><td colspan="5"><b>src/py_parallelizer/executors</b></td></tr><tr><td>&nbsp; &nbsp;<a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/multiprocess.py">multiprocess.py</a></td><td>84</td><td>26</td><td>69%</td><td><a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/multiprocess.py#L41">41</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/multiprocess.py#L65-L71">65&ndash;71</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/multiprocess.py#L88-L94">88&ndash;94</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/multiprocess.py#L124-L135">124&ndash;135</a></td></tr><tr><td>&nbsp; &nbsp;<a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/threaded.py">threaded.py</a></td><td>115</td><td>34</td><td>70%</td><td><a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/threaded.py#L53-L55">53&ndash;55</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/threaded.py#L117-L119">117&ndash;119</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/threaded.py#L131">131</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/threaded.py#L157-L162">157&ndash;162</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/threaded.py#L168-L178">168&ndash;178</a>, <a href="https://github.com/jonathanvanleeuwen/py_parallelizer/blob/main/src/py_parallelizer/executors/threaded.py#L183-L194">183&ndash;194</a></td></tr><tr><td><b>TOTAL</b></td><td><b>325</b></td><td><b>64</b></td><td><b>80%</b></td><td>&nbsp;</td></tr></tbody></table></details>
 <!-- Pytest Coverage Comment:End -->
