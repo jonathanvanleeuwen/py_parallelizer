@@ -20,7 +20,9 @@ def fast_then_slow_square(number: int, sleep: float) -> int:
 class TestThreadedInterruptHandling:
     def test_interrupt_returns_partial_results(self):
         """Test that interrupting threaded execution returns completed results."""
-        executor = ThreadedExecutor(func=fast_then_slow_square, n_workers=2, verbose=False)
+        executor = ThreadedExecutor(
+            func=fast_then_slow_square, n_workers=2, verbose=False
+        )
 
         # Start execution in a thread so we can interrupt it
         results_container = {"results": None, "interrupted": None}
@@ -75,7 +77,9 @@ class TestThreadedInterruptHandling:
 
     def test_collect_ready_results_gathers_completed(self):
         """Test that _collect_ready_results captures available results."""
-        executor = ThreadedExecutor(func=fast_then_slow_square, n_workers=4, verbose=False)
+        executor = ThreadedExecutor(
+            func=fast_then_slow_square, n_workers=4, verbose=False
+        )
 
         # Set up executor state
         executor.results = [None] * 4
@@ -129,7 +133,9 @@ class TestParallelExecutorInterruptHandling:
     def test_threaded_partial_results_structure(self):
         """Test that threaded execution maintains result structure on interrupt."""
         # Use direct executor to have more control
-        executor = ThreadedExecutor(func=fast_then_slow_square, n_workers=2, verbose=False)
+        executor = ThreadedExecutor(
+            func=fast_then_slow_square, n_workers=2, verbose=False
+        )
 
         # Pre-allocate and simulate partial execution
         executor.results = [None] * 6
@@ -148,7 +154,9 @@ class TestParallelExecutorInterruptHandling:
 
     def test_multiprocess_partial_results_structure(self):
         """Test that multiprocess execution maintains result structure on interrupt."""
-        executor = MultiprocessExecutor(func=fast_then_slow_square, n_workers=2, verbose=False)
+        executor = MultiprocessExecutor(
+            func=fast_then_slow_square, n_workers=2, verbose=False
+        )
 
         # Pre-allocate and simulate partial execution
         executor.results = [None] * 6
