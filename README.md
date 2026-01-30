@@ -13,13 +13,77 @@ A simple, flexible Python library for parallel execution using threading or mult
 
 ## Installation
 
+This package is not published to PyPI. You can install it by either cloning the repository or downloading the wheel file.
+
+### Option 1: Install from Wheel File (Recommended)
+
+Download the latest wheel file from the [releases](https://github.com/jonathanvanleeuwen/py_parallelizer/releases) or from the `dist/` directory:
+
 ```bash
-pip install py_parallelizer
+# Install a specific version (include the path to the wheel file)
+pip install dist/py_parallelizer-1.0.2-py3-none-any.whl
+
+# Or using uv
+uv pip install dist/py_parallelizer-1.0.2-py3-none-any.whl
 ```
 
-Or for development:
+> **Note:** Replace `dist/` with the actual path where you downloaded the wheel file, and update the version number as needed.
+
+### Option 2: Install from Source (Clone Repository)
+
 ```bash
+# Clone the repository
+git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
+cd py_parallelizer
+
+# Install using pip
+pip install .
+
+# Or install in editable/development mode
 pip install -e ".[dev]"
+```
+
+### Using uv (recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager. To use it:
+
+```bash
+# Install uv (if not already installed)
+pip install uv
+
+# Clone and enter the repository
+git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
+cd py_parallelizer
+
+# Create a virtual environment
+uv venv .venv
+
+# Activate the virtual environment
+# On Windows:
+.venv\Scripts\activate
+# On Unix/macOS:
+source .venv/bin/activate
+
+# Install the package
+uv pip install .
+
+# Or install with dev dependencies
+uv pip install -e ".[dev]"
+```
+
+### Building a Wheel File
+
+If you want to build a wheel file yourself:
+
+```bash
+# Using uv
+uv build
+
+# Or using pip/build
+pip install build
+python -m build
+
+# The wheel will be created in the dist/ directory
 ```
 
 ## Quick Start
@@ -30,19 +94,22 @@ from py_parallelizer import ParallelExecutor
 def process_item(x, multiplier=2):
     return x * multiplier
 
-# Simple usage
-executor = ParallelExecutor()
-results = executor.run_threaded(process_item, items=[1, 2, 3, 4, 5])
+# Simple usage - pass the function to the constructor
+executor = ParallelExecutor(process_item)
+results, interrupted = executor.run_threaded(x=[1, 2, 3, 4, 5])
 print(results)  # [2, 4, 6, 8, 10]
 
-# With extra kwargs
-results = executor.run_threaded(
-    process_item,
-    items=[1, 2, 3],
-    multiplier=10
+# With extra kwargs - ALL arguments must be lists of the same length
+results, interrupted = executor.run_threaded(
+    x=[1, 2, 3],
+    multiplier=[10, 10, 10]
 )
 print(results)  # [10, 20, 30]
 ```
+
+**Important:**
+- The `execute()` and `run_*` methods return a tuple of `(results, interrupted)` where `interrupted` is a boolean indicating if execution was interrupted (e.g., by Ctrl+C).
+- When using `run_multiprocess()`, you **must** wrap your code in `if __name__ == "__main__":` to prevent infinite process spawning. See [Multiprocessing](#multiprocessing-cpu-bound-tasks) section.
 
 ## When to Use What
 
@@ -63,12 +130,24 @@ def fetch_url(url, timeout=30):
     import requests
     return requests.get(url, timeout=timeout).status_code
 
-executor = ThreadedExecutor(n_workers=10, show_progress=True)
+# Pass the function to the constructor
+executor = ThreadedExecutor(func=fetch_url, n_workers=10, verbose=True)
 urls = ["https://example.com", "https://google.com", "https://github.com"]
-results = executor.execute(fetch_url, items=urls, timeout=10)
+
+# All arguments must be lists of the same length
+results, interrupted = executor.execute(
+    url=urls,
+    timeout=[10, 10, 10]  # One timeout per URL
+)
 ```
 
 ### Multiprocessing (CPU-bound tasks)
+
+**Important:** When using multiprocessing, you must:
+1. Use a named function (not a lambda) - functions must be picklable
+2. Place your execution code inside `if __name__ == "__main__":` guard
+
+The `if __name__ == "__main__":` guard is required because multiprocessing spawns new processes that re-import your module. Without this guard, the code at the top level would execute in each spawned process, causing infinite recursion and unwanted behavior.
 
 ```python
 from py_parallelizer import MultiprocessExecutor
@@ -76,34 +155,36 @@ from py_parallelizer import MultiprocessExecutor
 def heavy_computation(n):
     return sum(i * i for i in range(n))
 
-executor = MultiprocessExecutor(n_workers=4, show_progress=True)
-results = executor.execute(heavy_computation, items=[100000, 200000, 300000])
+# REQUIRED: All multiprocessing code must be inside this guard
+if __name__ == "__main__":
+    # Pass the function to the constructor
+    executor = MultiprocessExecutor(func=heavy_computation, n_workers=4, verbose=True)
+
+    # All arguments must be lists of the same length
+    results, interrupted = executor.execute(n=[100000, 200000, 300000])
+    print(results)
 ```
 
 ### Multiple Arguments
 
-For functions requiring multiple varying arguments, use `create_batch_kwargs`:
+All arguments to the function must be passed as lists of the same length:
 
 ```python
 from py_parallelizer import ParallelExecutor
-from py_parallelizer.utils import create_batch_kwargs
 
 def process(a, b, constant="default"):
     return f"{a}-{b}-{constant}"
 
-# Create list of kwargs dicts
-batch_kwargs = create_batch_kwargs(
-    a=[1, 2, 3],
-    b=["x", "y", "z"]
-)
-# Result: [{"a": 1, "b": "x"}, {"a": 2, "b": "y"}, {"a": 3, "b": "z"}]
+# Pass the function to the constructor
+executor = ParallelExecutor(process, verbose=False)
 
-executor = ParallelExecutor()
-results = executor.run_threaded(
-    process,
-    items=batch_kwargs,  # Pass kwargs dicts as items
-    constant="shared"    # This applies to all calls
+# All arguments are lists - each index forms one function call
+results, interrupted = executor.run_threaded(
+    a=[1, 2, 3],
+    b=["x", "y", "z"],
+    constant=["shared", "shared", "shared"]  # Must also be a list!
 )
+# Results: ["1-x-shared", "2-y-shared", "3-z-shared"]
 ```
 
 ### Handling Interrupts
@@ -118,19 +199,23 @@ def slow_task(x):
     time.sleep(1)
     return x * 2
 
-executor = ThreadedExecutor(n_workers=2)
+executor = ThreadedExecutor(func=slow_task, n_workers=2)
 
 # If you press Ctrl+C during execution:
 # - Workers stop gracefully
 # - Already-completed results are returned
 # - No crash or traceback spam
-results = executor.execute(slow_task, items=range(100))
-print(f"Got {len(results)} results before interrupt")
+results, interrupted = executor.execute(x=list(range(100)))
+
+if interrupted:
+    print(f"Execution was interrupted! Got {len([r for r in results if r is not None])} results")
+else:
+    print(f"Completed all {len(results)} tasks")
 ```
 
-### Nested Parallelism (Threading + Multiprocessing)
+### Sequential Parallelism (Threaded then Multiprocess)
 
-For complex workloads, combine both: use threading for I/O and multiprocessing for CPU work:
+For workflows where you first gather data (I/O-bound) then process it (CPU-bound), run them sequentially:
 
 ```python
 from py_parallelizer import ThreadedExecutor, MultiprocessExecutor
@@ -144,31 +229,87 @@ def process_data(data):
     """CPU-bound: heavy processing"""
     return expensive_computation(data)
 
-# Step 1: Fetch data in parallel (I/O-bound -> threads)
-thread_executor = ThreadedExecutor(n_workers=10)
-raw_data = thread_executor.execute(fetch_data, items=urls)
+if __name__ == "__main__":
+    urls = ["https://api.example.com/1", "https://api.example.com/2"]
 
-# Step 2: Process data in parallel (CPU-bound -> multiprocessing)
-process_executor = MultiprocessExecutor(n_workers=4)
-results = process_executor.execute(process_data, items=raw_data)
+    # Step 1: Fetch all data in parallel using threads (I/O-bound)
+    thread_executor = ThreadedExecutor(func=fetch_data, n_workers=10)
+    raw_data, _ = thread_executor.execute(url=urls)
+
+    # Step 2: Process all data in parallel using multiprocessing (CPU-bound)
+    process_executor = MultiprocessExecutor(func=process_data, n_workers=4)
+    results, _ = process_executor.execute(data=raw_data)
 ```
+
+### Nested Parallelism (Threading WITHIN Multiprocessing)
+
+For maximum parallelism, run threads **inside** each process. This is useful when each task involves both I/O and CPU work. Use `create_batches` to split work across processes, and each process runs threads internally:
+
+```python
+from py_parallelizer import ParallelExecutor, create_batches, flatten_results
+
+def process_item(item, multiplier):
+    """Individual item processing (runs in a thread)"""
+    # Could include I/O operations here
+    return item * multiplier
+
+def process_batch(batch_items: list, batch_multipliers: list) -> list:
+    """Process a batch of items using threads (runs in a separate process)"""
+    results, _ = ParallelExecutor(
+        process_item, n_workers=4, verbose=False
+    ).run_threaded(item=batch_items, multiplier=batch_multipliers)
+    return results
+
+if __name__ == "__main__":
+    # All items to process
+    all_items = list(range(100))
+    all_multipliers = [2] * len(all_items)
+    n_processes = 4
+
+    # Split into batches - one batch per process
+    item_batches = create_batches(all_items, n_batches=n_processes)
+    multiplier_batches = create_batches(all_multipliers, n_batches=n_processes)
+
+    # Each process receives a batch and spawns threads internally
+    batch_results, _ = ParallelExecutor(
+        process_batch, n_workers=n_processes, verbose=True
+    ).run_multiprocess(
+        batch_items=item_batches,
+        batch_multipliers=multiplier_batches
+    )
+
+    # Flatten the nested results from each process
+    final_results = flatten_results(batch_results)
+    print(f"Processed {len(final_results)} items")  # 100 items
+```
+
+This pattern gives you:
+- **n_processes** separate Python processes (bypassing the GIL)
+- **n_workers** threads per process for concurrent I/O
+- Automatic batching and result flattening
 
 ## Batch Utilities
 
+Helper functions for splitting data and combining results:
+
 ```python
-from py_parallelizer.utils import create_batches, flatten_results, create_batch_kwargs
+from py_parallelizer import create_batches, flatten_results, create_batch_kwargs
 
-# Split items into chunks
+# Split items into n_batches for distributing across processes
 items = list(range(100))
-batches = create_batches(items, batch_size=10)  # 10 batches of 10 items
+batches = create_batches(items, n_batches=4)  # 4 batches of 25 items each
+# [[0-24], [25-49], [50-74], [75-99]]
 
-# Flatten nested results
+# Flatten nested results (e.g., after nested parallelism)
 nested = [[1, 2], [3, 4], [5, 6]]
 flat = flatten_results(nested)  # [1, 2, 3, 4, 5, 6]
 
-# Create kwargs for zipped arguments
-kwargs_list = create_batch_kwargs(x=[1, 2, 3], y=["a", "b", "c"])
-# [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}, {"x": 3, "y": "c"}]
+# Split multiple kwargs into batches (keeps arguments aligned)
+batch_kwargs_list = create_batch_kwargs(
+    kwargs={'x': [1, 2, 3, 4], 'y': ['a', 'b', 'c', 'd']},
+    n_batches=2
+)
+# [{'x': [1, 2], 'y': ['a', 'b']}, {'x': [3, 4], 'y': ['c', 'd']}]
 ```
 
 ## Common Pitfalls
@@ -176,34 +317,60 @@ kwargs_list = create_batch_kwargs(x=[1, 2, 3], y=["a", "b", "c"])
 ### 1. Using multiprocessing for I/O-bound tasks
 ```python
 # ❌ Bad: Multiprocessing has overhead, threads are better for I/O
-results = executor.run_multiprocess(fetch_url, items=urls)
+executor = ParallelExecutor(fetch_url)
+results, _ = executor.run_multiprocess(url=urls)
 
 # ✅ Good: Use threads for I/O
-results = executor.run_threaded(fetch_url, items=urls)
+executor = ParallelExecutor(fetch_url)
+results, _ = executor.run_threaded(url=urls)
 ```
 
 ### 2. Lambda functions with multiprocessing
 ```python
 # ❌ Bad: Lambdas can't be pickled
-executor.run_multiprocess(lambda x: x * 2, items=[1, 2, 3])
+executor = ParallelExecutor(lambda x: x * 2)
+executor.run_multiprocess(x=[1, 2, 3])  # Will fail!
 
 # ✅ Good: Use named functions
 def double(x):
     return x * 2
-executor.run_multiprocess(double, items=[1, 2, 3])
+executor = ParallelExecutor(double)
+executor.run_multiprocess(x=[1, 2, 3])
 ```
 
-### 3. Too many workers
+### 3. Missing `if __name__ == "__main__":` guard
+```python
+# ❌ Bad: Code outside guard runs in every spawned process
+from py_parallelizer import ParallelExecutor
+
+def double(x):
+    return x * 2
+
+executor = ParallelExecutor(double)
+results, _ = executor.run_multiprocess(x=[1, 2, 3])  # Causes issues!
+
+# ✅ Good: Protect multiprocessing code with the guard
+from py_parallelizer import ParallelExecutor
+
+def double(x):
+    return x * 2
+
+if __name__ == "__main__":
+    executor = ParallelExecutor(double)
+    results, _ = executor.run_multiprocess(x=[1, 2, 3])
+```
+
+### 4. Too many workers
 ```python
 # ❌ Bad: More processes than CPU cores wastes resources
-executor = MultiprocessExecutor(n_workers=100)
+executor = MultiprocessExecutor(func=my_func, n_workers=100)
 
-# ✅ Good: Match CPU cores for CPU-bound work
+# ✅ Good: Match CPU cores for CPU-bound work (or leave as None for auto-detect)
 import os
-executor = MultiprocessExecutor(n_workers=os.cpu_count())
+executor = MultiprocessExecutor(func=my_func, n_workers=os.cpu_count())
 ```
 
-### 4. Forgetting that multiprocessing copies data
+### 5. Forgetting that multiprocessing copies data
 ```python
 # ❌ Bad: Large objects get copied to each process
 huge_data = load_huge_dataset()
@@ -213,10 +380,13 @@ def process(idx):
 # ✅ Good: Pass only what's needed
 def process(item):
     return transform(item)
-executor.run_multiprocess(process, items=huge_data)
+
+if __name__ == "__main__":
+    executor = ParallelExecutor(process)
+    executor.run_multiprocess(item=huge_data)
 ```
 
-### 5. Not handling exceptions
+### 6. Not handling exceptions
 ```python
 # Results may contain None for failed items
 # Check your results or add try/except in your worker function
@@ -227,26 +397,55 @@ def safe_process(x):
         return {"error": str(e), "item": x}
 ```
 
+### 7. Passing arguments with wrong names
+```python
+# ❌ Bad: Using 'items' when function expects 'x'
+def double(x):
+    return x * 2
+
+executor = ParallelExecutor(double)
+results, _ = executor.run_threaded(items=[1, 2, 3])  # Error! 'items' is not a parameter
+
+# ✅ Good: Use the actual parameter name
+executor = ParallelExecutor(double)
+results, _ = executor.run_threaded(x=[1, 2, 3])  # Correct!
+```
+
 ## API Reference
 
 ### ThreadedExecutor
 ```python
-ThreadedExecutor(n_workers=4, show_progress=True, progress_desc="Processing")
-executor.execute(func, items, **kwargs) -> list
+ThreadedExecutor(func, n_workers=None, verbose=True)
+executor.execute(**kwargs) -> tuple[list, bool]
 ```
+- `func`: The function to execute in parallel
+- `n_workers`: Number of threads (defaults to CPU count)
+- `verbose`: Show progress bar
+- `**kwargs`: Each keyword argument must be a list of the same length
+- Returns: `(results, interrupted)` tuple
 
 ### MultiprocessExecutor
 ```python
-MultiprocessExecutor(n_workers=4, show_progress=True, progress_desc="Processing")
-executor.execute(func, items, **kwargs) -> list
+MultiprocessExecutor(func, n_workers=None, verbose=True)
+executor.execute(**kwargs) -> tuple[list, bool]
 ```
+- `func`: The function to execute in parallel (must be picklable)
+- `n_workers`: Number of processes (defaults to CPU count)
+- `verbose`: Show progress bar
+- `**kwargs`: Each keyword argument must be a list of the same length
+- Returns: `(results, interrupted)` tuple
 
 ### ParallelExecutor
 ```python
-ParallelExecutor(n_workers=4, show_progress=True, progress_desc="Processing")
-executor.run_threaded(func, items, **kwargs) -> list
-executor.run_multiprocess(func, items, **kwargs) -> list
+ParallelExecutor(func, n_workers=None, verbose=True)
+executor.run_threaded(**kwargs) -> tuple[list, bool]
+executor.run_multiprocess(**kwargs) -> tuple[list, bool]
 ```
+- `func`: The function to execute in parallel
+- `n_workers`: Number of workers (defaults to CPU count)
+- `verbose`: Show progress bar
+- `**kwargs`: Each keyword argument must be a list of the same length
+- Returns: `(results, interrupted)` tuple
 
 ## Coverage Report
 <!-- Pytest Coverage Comment:Begin -->

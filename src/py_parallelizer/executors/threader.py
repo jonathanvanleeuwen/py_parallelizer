@@ -49,9 +49,17 @@ class ThreadedExecutor(BaseParallelExecutor):
                 self.results_queue.put((idx, result))
             except Exception as e:
                 logger.error("[%s] Failed processing task %s: %s", thread_name, idx, e)
+                # Store first error and signal workers to stop
+                if self.first_error is None:
+                    self.first_error = e
+                    self.stop_event.set()
                 self.results_queue.put((idx, None))
+                self.results_queue.put("DONE")
+                break
 
     def execute(self, **kwargs) -> tuple[list, bool]:
+        self.first_error = None
+        self.stop_event.clear()
         keywordargs = self._format_args(**kwargs)
         total_jobs = len(keywordargs)
         self.init_pbar(total=total_jobs)
@@ -86,6 +94,11 @@ class ThreadedExecutor(BaseParallelExecutor):
             "Threaded execution done: %s results collected",
             len([r for r in self.results if r is not None]),
         )
+
+        # Re-raise the first error encountered by any worker
+        if self.first_error is not None:
+            raise self.first_error
+
         return self.results, self.interrupt
 
     def _collect_ready_results(self) -> None:

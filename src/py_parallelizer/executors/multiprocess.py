@@ -38,6 +38,7 @@ class MultiprocessExecutor(BaseParallelExecutor):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     def execute(self, **kwargs) -> tuple[list, bool]:
+        self.first_error = None
         keywordargs = self._format_args(**kwargs)
         total_jobs = len(keywordargs)
         self.init_pbar(total=total_jobs)
@@ -65,6 +66,11 @@ class MultiprocessExecutor(BaseParallelExecutor):
             "Multiprocess execution done: %s results collected",
             len([r for r in self.results if r is not None]),
         )
+
+        # Re-raise the first error encountered by any worker
+        if self.first_error is not None:
+            raise self.first_error
+
         return self.results, self.interrupt
 
     def _collect_ready_results(self) -> None:
@@ -74,8 +80,11 @@ class MultiprocessExecutor(BaseParallelExecutor):
                     self.results[proc_idx] = process.get(timeout=0)
                     self.processes[proc_idx] = None
                     self.pbar_update()
-                except Exception:
-                    pass
+                except Exception as e:
+                    # Store first error encountered
+                    if self.first_error is None:
+                        self.first_error = e
+                    self.processes[proc_idx] = None
 
     def _collect_results(self) -> None:
         logger.debug("Starting result collection from processes")

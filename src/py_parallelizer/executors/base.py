@@ -28,6 +28,7 @@ class BaseParallelExecutor(ABC):
         self.pbar = None
         self.pbar_color = pbar_color
         self.pbar_desc: str = "Running code concurrently"
+        self.first_error: Exception | None = None
         logger.debug(
             "%s processing [%s] using [%s] workers...",
             self.__class__.__name__,

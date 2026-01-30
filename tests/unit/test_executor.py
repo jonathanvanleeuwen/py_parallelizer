@@ -2,6 +2,8 @@
 
 import time
 
+import pytest
+
 from py_parallelizer import ParallelExecutor
 
 
@@ -104,3 +106,27 @@ class TestRunMultiprocess:
         ).run_multiprocess()
         assert results == []
         assert interrupted is False
+
+
+class TestArgumentValidation:
+    def test_invalid_kwarg_raises_typeerror_threaded(self):
+        """Test that invalid kwargs raise TypeError."""
+        with pytest.raises(TypeError, match="unexpected keyword argument"):
+            ParallelExecutor(square, verbose=False).run_threaded(
+                invalid_arg=[1, 2, 3]
+            )
+
+    def test_invalid_kwarg_raises_typeerror_multiprocess(self):
+        """Test that invalid kwargs raise TypeError."""
+        with pytest.raises(TypeError, match="unexpected keyword argument"):
+            ParallelExecutor(square, verbose=False).run_multiprocess(
+                invalid_arg=[1, 2, 3]
+            )
+
+    def test_valid_kwargs_no_error(self):
+        """Test that valid kwargs don't raise errors."""
+        results, _ = ParallelExecutor(add, verbose=False).run_threaded(
+            a=[1, 2, 3],
+            b=[10, 20, 30]
+        )
+        assert results == [11, 22, 33]
