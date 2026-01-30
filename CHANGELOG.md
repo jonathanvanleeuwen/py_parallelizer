@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.4 (2026-01-30)
+
+### Bug Fixes
+
+- Auto build wheel when released
+  ([`bfc038e`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/bfc038ec37254dcf7d2a47721a0849fb4f6e9f1d))
+
+
 ## v1.0.3 (2026-01-30)
 
 ### Bug Fixes
