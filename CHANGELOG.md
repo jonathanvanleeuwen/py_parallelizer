@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.3 (2026-02-02)
+
+### Bug Fixes
+
+- Updaye cov report in REAdME
+  ([`a34e1e7`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/a34e1e7f7f9a922e5f630933f09782d32e06a65d))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`082e0c5`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/082e0c5058901cabbd836a6154b9e7f6cab70bb0))
+
+
 ## v1.1.2 (2026-02-02)
 
 ### Bug Fixes
