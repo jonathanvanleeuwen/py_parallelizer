@@ -40,7 +40,6 @@ jobs:
           hide-comment: true
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
-          coverage-path-prefix: src/py_parallelizer/
 
       - name: Update README with coverage badge HTML
         run: |
