@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.4 (2026-02-02)
+
+### Bug Fixes
+
+- New prefix cov report
+  ([`b616cc4`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/b616cc4bc411bd939c0895a12a949ffe562c2460))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`0bad6a1`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/0bad6a178fdf574eec8725e476cd66065b21095a))
+
+
 ## v1.1.3 (2026-02-02)
 
 ### Bug Fixes
