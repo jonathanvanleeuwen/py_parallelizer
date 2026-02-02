@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.6 (2026-02-02)
+
+### Bug Fixes
+
+- Ran pre_commit
+  ([`a7228de`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/a7228dec54172bcf5e3d9838cd9e3cc1fcb37f0f))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`5b3bded`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/5b3bdedbdbdd108edd2843a37071a7a8115b84d8))
+
+
 ## v1.1.5 (2026-02-02)
 
 ### Bug Fixes
