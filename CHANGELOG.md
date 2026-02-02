@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.2 (2026-02-02)
+
+### Bug Fixes
+
+- Updated the release cicd step
+  ([`ffde9aa`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/ffde9aa0b0d0049bac6209e602c760d070c00e12))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`0065711`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/0065711fce884845916e30470920f3f7f5ac0815))
+
+
 ## v1.1.1 (2026-02-02)
 
 ### Bug Fixes
