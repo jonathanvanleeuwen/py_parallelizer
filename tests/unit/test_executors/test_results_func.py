@@ -1,9 +1,6 @@
 """Tests for results_func functionality in executors."""
 
 import threading
-from collections.abc import Callable
-
-import pytest
 
 from py_parallelizer import ParallelExecutor
 from py_parallelizer.executors.multiprocess import MultiprocessExecutor

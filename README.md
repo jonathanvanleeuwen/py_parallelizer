@@ -19,6 +19,7 @@ A simple, flexible Python library for parallel execution using threading or mult
     - [Multiprocessing (CPU-bound tasks)](#multiprocessing-cpu-bound-tasks)
     - [Multiple Arguments](#multiple-arguments)
     - [Handling Interrupts](#handling-interrupts)
+    - [Results Function (Thread-Safe Result Handling)](#results-function-thread-safe-result-handling)
     - [Sequential Parallelism (Threaded then Multiprocess)](#sequential-parallelism-threaded-then-multiprocess)
     - [Nested Parallelism (Threading WITHIN Multiprocessing)](#nested-parallelism-threading-within-multiprocessing)
   - [Batch Utilities](#batch-utilities)
@@ -247,6 +248,68 @@ else:
     print(f"Completed all {len(results)} tasks")
 ```
 
+### Results Function (Thread-Safe Result Handling)
+
+When processing results that need thread-safe handling (e.g., writing to a single file, updating a shared database), use the `results_func` parameter. This function runs in the **main thread/process** and is called sequentially for each completed result, making it safe to perform operations that aren't thread/process-safe.
+
+```python
+from py_parallelizer import ThreadedExecutor
+
+def process_image(image_path):
+    """Process an image (runs in parallel threads)"""
+    # Heavy computation here
+    return {"path": image_path, "processed": True}
+
+def save_result(result, process_index):
+    """
+    Handle result in main thread (thread-safe).
+
+    Args:
+        result: The return value from the worker function
+        process_index: The index of this task in the original input list
+
+    Returns:
+        The (optionally transformed) result to store
+    """
+    # Safe to write to a shared file here - runs sequentially in main thread
+    with open("results.txt", "a") as f:
+        f.write(f"{process_index}: {result}\n")
+    return result
+
+executor = ThreadedExecutor(
+    func=process_image,
+    n_workers=4,
+    results_func=save_result  # Called in main thread for each result
+)
+results, _ = executor.execute(image_path=["img1.jpg", "img2.jpg", "img3.jpg"])
+```
+
+**Key points:**
+- `results_func` receives two arguments: `result` (the return value) and `process_index` (the task's index)
+- It runs in the main thread/process, so it's safe to modify shared state
+- The return value of `results_func` is what gets stored in the results list
+- You can use `**kwargs` in your function signature: `def my_func(result, **kwargs)`
+
+**Use cases:**
+- Writing results to a single file (not thread-safe on Windows)
+- Updating a database connection
+- Accumulating statistics
+- Progress logging with task indices
+
+```python
+# Accumulator pattern - safe because results_func runs in main thread
+accumulator = {"total": 0, "count": 0}
+
+def accumulate(result, process_index):
+    accumulator["total"] += result
+    accumulator["count"] += 1
+    return result
+
+executor = ThreadedExecutor(func=compute, n_workers=4, results_func=accumulate)
+results, _ = executor.execute(x=[1, 2, 3, 4, 5])
+print(f"Sum: {accumulator['total']}, Count: {accumulator['count']}")
+```
+
 ### Sequential Parallelism (Threaded then Multiprocess)
 
 For workflows where you first gather data (I/O-bound) then process it (CPU-bound), run them sequentially:
@@ -449,35 +512,38 @@ results, _ = executor.run_threaded(x=[1, 2, 3])  # Correct!
 
 ### ThreadedExecutor
 ```python
-ThreadedExecutor(func, n_workers=None, verbose=True)
+executor = ThreadedExecutor(func, n_workers=None, verbose=True, results_func=None)
 executor.execute(**kwargs) -> tuple[list, bool]
 ```
 - `func`: The function to execute in parallel
 - `n_workers`: Number of threads (defaults to CPU count)
 - `verbose`: Show progress bar
+- `results_func`: Optional callback function called in main thread for each result. Receives `(result, process_index)` and returns the (optionally transformed) result to store
 - `**kwargs`: Each keyword argument must be a list of the same length
 - Returns: `(results, interrupted)` tuple
 
 ### MultiprocessExecutor
 ```python
-MultiprocessExecutor(func, n_workers=None, verbose=True)
+executor = MultiprocessExecutor(func, n_workers=None, verbose=True, results_func=None)
 executor.execute(**kwargs) -> tuple[list, bool]
 ```
 - `func`: The function to execute in parallel (must be picklable)
 - `n_workers`: Number of processes (defaults to CPU count)
 - `verbose`: Show progress bar
+- `results_func`: Optional callback function called in main process for each result. Receives `(result, process_index)` and returns the (optionally transformed) result to store
 - `**kwargs`: Each keyword argument must be a list of the same length
 - Returns: `(results, interrupted)` tuple
 
 ### ParallelExecutor
 ```python
-ParallelExecutor(func, n_workers=None, verbose=True)
+executor = ParallelExecutor(func, n_workers=None, verbose=True, results_func=None)
 executor.run_threaded(**kwargs) -> tuple[list, bool]
 executor.run_multiprocess(**kwargs) -> tuple[list, bool]
 ```
 - `func`: The function to execute in parallel
 - `n_workers`: Number of workers (defaults to CPU count)
 - `verbose`: Show progress bar
+- `results_func`: Optional callback function called in main thread/process for each result. Receives `(result, process_index)` and returns the (optionally transformed) result to store
 - `**kwargs`: Each keyword argument must be a list of the same length
 - Returns: `(results, interrupted)` tuple
 

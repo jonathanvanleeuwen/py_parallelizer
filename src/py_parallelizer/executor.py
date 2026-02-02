@@ -35,6 +35,7 @@ class ParallelExecutor:
             func=self.func,
             n_workers=self.n_workers,
             verbose=self.verbose,
+            results_func=self.results_func,
         )
         return executor.execute(**kwargs)
 
@@ -48,5 +49,6 @@ class ParallelExecutor:
             func=self.func,
             n_workers=self.n_workers,
             verbose=self.verbose,
+            results_func=self.results_func,
         )
         return executor.execute(**kwargs)

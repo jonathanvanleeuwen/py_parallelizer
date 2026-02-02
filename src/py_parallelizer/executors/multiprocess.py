@@ -53,7 +53,9 @@ class MultiprocessExecutor(BaseParallelExecutor):
         self.processes = []
         self.results = [None] * total_jobs
         logger.debug("Submitting tasks to process pool")
-        self.processes = [self.pool.apply_async(self.func, kwds=kwds) for kwds in keywordargs]
+        self.processes = [
+            self.pool.apply_async(self.func, kwds=kwds) for kwds in keywordargs
+        ]
         logger.debug("Submitted %s tasks", len(self.processes))
         try:
             self._collect_results()
