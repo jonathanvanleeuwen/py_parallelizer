@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.5 (2026-02-02)
+
+### Bug Fixes
+
+- Added precommit to cicd
+  ([`da78fc6`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/da78fc60b624aba147b7c7f418292beb3901318c))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`f9dd21e`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/f9dd21ec732ea2795f18cbb365edb4a493cbe25d))
+
+
 ## v1.1.4 (2026-02-02)
 
 ### Bug Fixes
