@@ -2,6 +2,27 @@
 
 <!-- version list -->
 
+## v1.1.0 (2026-02-02)
+
+### Bug Fixes
+
+- Added tests for results function
+  ([`2417e79`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/2417e793c47633909d0b36be6d137718ec5a9c5c))
+
+- Fixed some bugs and updated README
+  ([`1c8c64e`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/1c8c64e608778886ac6154ba9c2b7e404c7b5a81))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`48d1b62`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/48d1b62e179588880cc6e8ed9a05b8838aaf684e))
+
+### Features
+
+- Added results_func for thread safe handling
+  ([`c579698`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/c57969838de209398c2dffcd269032c3bbf8eb42))
+
+
 ## v1.0.4 (2026-01-30)
 
 ### Bug Fixes
