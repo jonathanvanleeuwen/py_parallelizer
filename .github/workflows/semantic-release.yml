@@ -106,3 +106,20 @@ jobs:
           git add dist/*.whl
           git commit -m "chore: update wheel to latest version [skip ci]" || echo "No changes to commit"
           git push
+
+      - name: Get latest version tag
+        id: get_version
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Upload wheel to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          files: dist/*.whl
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.SEM_RELEASE }}
