@@ -17,10 +17,12 @@ class ParallelExecutor:
         self,
         func: Callable,
         n_workers: int | None = None,
+        results_func=None,
         verbose: bool = True,
     ) -> None:
         self.func = func
         self.n_workers = n_workers
+        self.results_func = results_func
         self.verbose = verbose
 
     def run_threaded(self, **kwargs) -> tuple[list, bool]:
@@ -33,6 +35,7 @@ class ParallelExecutor:
             func=self.func,
             n_workers=self.n_workers,
             verbose=self.verbose,
+            results_func=self.results_func,
         )
         return executor.execute(**kwargs)
 
@@ -46,5 +49,6 @@ class ParallelExecutor:
             func=self.func,
             n_workers=self.n_workers,
             verbose=self.verbose,
+            results_func=self.results_func,
         )
         return executor.execute(**kwargs)

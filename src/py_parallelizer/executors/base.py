@@ -19,6 +19,7 @@ class BaseParallelExecutor(ABC):
         func: Callable,
         n_workers: int | None,
         pbar_color: str,
+        results_func=None,
         verbose: bool = True,
     ) -> None:
         self.func = func
@@ -28,6 +29,7 @@ class BaseParallelExecutor(ABC):
         self.pbar = None
         self.pbar_color = pbar_color
         self.pbar_desc: str = "Running code concurrently"
+        self.results_func = results_func
         self.first_error: Exception | None = None
         logger.debug(
             "%s processing [%s] using [%s] workers...",
