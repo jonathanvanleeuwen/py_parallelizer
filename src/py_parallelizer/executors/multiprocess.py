@@ -21,12 +21,14 @@ class MultiprocessExecutor(BaseParallelExecutor):
         n_workers: int | None = None,
         verbose: bool = True,
         pbar_color: str = "red",
+        results_func=None,
     ) -> None:
         super().__init__(
             func=func,
             n_workers=n_workers,
             pbar_color=pbar_color,
             verbose=verbose,
+            results_func=results_func,
         )
         self.pool: mp.Pool = mp.Pool(self.n_workers, self._init_worker)
         self.processes: list = []
@@ -51,9 +53,7 @@ class MultiprocessExecutor(BaseParallelExecutor):
         self.processes = []
         self.results = [None] * total_jobs
         logger.debug("Submitting tasks to process pool")
-        self.processes = [
-            self.pool.apply_async(self.func, kwds=kwds) for kwds in keywordargs
-        ]
+        self.processes = [self.pool.apply_async(self.func, kwds=kwds) for kwds in keywordargs]
         logger.debug("Submitted %s tasks", len(self.processes))
         try:
             self._collect_results()
@@ -77,7 +77,10 @@ class MultiprocessExecutor(BaseParallelExecutor):
         for proc_idx, process in enumerate(self.processes):
             if process and process.ready():
                 try:
-                    self.results[proc_idx] = process.get(timeout=0)
+                    results = process.get(timeout=0)
+                    if self.results_func:
+                        results = self.results_func(results, process_index=proc_idx)
+                    self.results[proc_idx] = results
                     self.processes[proc_idx] = None
                     self.pbar_update()
                 except Exception as e:

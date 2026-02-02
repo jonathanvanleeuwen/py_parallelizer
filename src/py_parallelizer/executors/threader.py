@@ -19,12 +19,14 @@ class ThreadedExecutor(BaseParallelExecutor):
         n_workers: int | None = None,
         verbose: bool = True,
         pbar_color: str = "blue",
+        results_func=None,
     ) -> None:
         super().__init__(
             func=func,
             n_workers=n_workers,
             pbar_color=pbar_color,
             verbose=verbose,
+            results_func=results_func,
         )
         self.task_queue: Queue = Queue()
         self.results_queue: Queue = Queue()
@@ -107,6 +109,8 @@ class ThreadedExecutor(BaseParallelExecutor):
                 result = self.results_queue.get_nowait()
                 if not (isinstance(result, str) and result == "DONE"):
                     idx, value = result
+                    if self.results_func:
+                        value = self.results_func(value, process_index=idx)
                     self.results[idx] = value
                     self.pbar_update()
             except Exception:
@@ -124,6 +128,8 @@ class ThreadedExecutor(BaseParallelExecutor):
                 )
             else:
                 idx, value = result
+                if self.results_func:
+                    value = self.results_func(value, process_index=idx)
                 self.results[idx] = value
                 self.pbar_update()
         logger.debug("Result collection complete")
