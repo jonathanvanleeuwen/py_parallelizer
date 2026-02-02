@@ -8,10 +8,14 @@ A simple, flexible Python library for parallel execution using threading or mult
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Installation](#installation)
-    - [Option 1: Install from Wheel File (Recommended)](#option-1-install-from-wheel-file-recommended)
-    - [Option 2: Install from Source (Clone Repository)](#option-2-install-from-source-clone-repository)
-    - [Using uv (recommended)](#using-uv-recommended)
-    - [Building a Wheel File](#building-a-wheel-file)
+    - [Option 1: Install from Private GitHub Release (Recommended)](#option-1-install-from-private-github-release-recommended)
+      - [Step 1: Create a Personal Access Token (one-time setup)](#step-1-create-a-personal-access-token-one-time-setup)
+      - [Step 2: Install the package](#step-2-install-the-package)
+      - [Using uv (faster alternative to pip)](#using-uv-faster-alternative-to-pip)
+    - [Option 2: Install from Wheel File in Repository](#option-2-install-from-wheel-file-in-repository)
+    - [Option 3: Install from Source (Clone Repository)](#option-3-install-from-source-clone-repository)
+    - [Option 4: Add to requirements.txt or pyproject.toml](#option-4-add-to-requirementstxt-or-pyprojecttoml)
+    - [Building a Wheel File Locally](#building-a-wheel-file-locally)
   - [Quick Start](#quick-start)
   - [When to Use What](#when-to-use-what)
   - [Usage Guide](#usage-guide)
@@ -48,26 +52,93 @@ A simple, flexible Python library for parallel execution using threading or mult
 
 ## Installation
 
-This package is not published to PyPI. You can install it by either cloning the repository or downloading the wheel file.
+This package is distributed privately via GitHub. Only users with access to the repository can install it. You can install it directly with pip if you have been added as a collaborator.
 
-### Option 1: Install from Wheel File (Recommended)
+### Option 1: Install from Private GitHub Release (Recommended)
 
-Download the latest wheel file from the [releases](https://github.com/jonathanvanleeuwen/py_parallelizer/releases) or from the `dist/` directory:
+Since this is a private repository, you need to authenticate with a GitHub Personal Access Token (PAT).
+
+#### Step 1: Create a Personal Access Token (one-time setup)
+
+1. Go to [GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)](https://github.com/settings/tokens)
+2. Click **"Generate new token (classic)"**
+3. Give it a descriptive name (e.g., `py_parallelizer-install`)
+4. Select the **`repo`** scope (required for private repositories)
+5. Click **"Generate token"**
+6. **Copy the token immediately** - you won't be able to see it again!
+
+#### Step 2: Install the package
+
+**Option A: Install directly with the token in the URL**
 
 ```bash
-# Install a specific version (include the path to the wheel file)
-pip install dist/py_parallelizer-1.0.2-py3-none-any.whl
+# Replace YOUR_TOKEN with your actual token and VERSION with the desired version (e.g., v1.1.0)
+pip install "git+https://YOUR_TOKEN@github.com/jonathanvanleeuwen/py_parallelizer.git@VERSION"
 
-# Or using uv
-uv pip install dist/py_parallelizer-1.0.2-py3-none-any.whl
+# Example with a specific version:
+pip install "git+https://YOUR_TOKEN@github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0"
+
+# Install the latest version (main branch):
+pip install "git+https://YOUR_TOKEN@github.com/jonathanvanleeuwen/py_parallelizer.git"
 ```
 
-> **Note:** Replace `dist/` with the actual path where you downloaded the wheel file, and update the version number as needed.
+**Option B: Configure git credentials (more secure, recommended)**
 
-### Option 2: Install from Source (Clone Repository)
+This method doesn't expose your token in command history:
 
 ```bash
-# Clone the repository
+# Store credentials in git (one-time setup)
+git config --global credential.helper store
+
+# Then install normally - git will prompt for credentials once
+pip install "git+https://github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0"
+# When prompted: username = your GitHub username, password = your PAT
+```
+
+**Option C: Using environment variable (good for CI/CD)**
+
+```bash
+# Set your token as an environment variable
+# On Windows (PowerShell):
+$env:GH_TOKEN = "your_token_here"
+pip install "git+https://$env:GH_TOKEN@github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0"
+
+# On Linux/macOS:
+export GH_TOKEN="your_token_here"
+pip install "git+https://${GH_TOKEN}@github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0"
+```
+
+#### Using uv (faster alternative to pip)
+
+```bash
+# Using uv with token in URL
+uv pip install "git+https://YOUR_TOKEN@github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0"
+
+# Or using environment variable
+uv pip install "git+https://${GH_TOKEN}@github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0"
+```
+
+### Option 2: Install from Wheel File in Repository
+
+The latest wheel files are also committed to the `dist/` directory in the repository. After cloning:
+
+```bash
+# Clone the repository first
+git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
+
+# Install the wheel file directly
+pip install py_parallelizer/dist/py_parallelizer-1.1.0-py3-none-any.whl
+
+# Or using uv
+uv pip install py_parallelizer/dist/py_parallelizer-1.1.0-py3-none-any.whl
+```
+
+> **Note:** Replace the version number with the actual version in the `dist/` directory.
+
+### Option 3: Install from Source (Clone Repository)
+
+```bash
+# Clone the repository (requires git credentials or SSH key)
 git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
 cd py_parallelizer
 
@@ -78,39 +149,35 @@ pip install .
 pip install -e ".[dev]"
 ```
 
-### Using uv (recommended)
+### Option 4: Add to requirements.txt or pyproject.toml
 
-[uv](https://docs.astral.sh/uv/) is a fast Python package manager. To use it:
+**In requirements.txt:**
 
-```bash
-# Install uv (if not already installed)
-pip install uv
-
-# Clone and enter the repository
-git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
-cd py_parallelizer
-
-# Create a virtual environment
-uv venv .venv
-
-# Activate the virtual environment
-# On Windows:
-.venv\Scripts\activate
-# On Unix/macOS:
-source .venv/bin/activate
-
-# Install the package
-uv pip install .
-
-# Or install with dev dependencies
-uv pip install -e ".[dev]"
+```txt
+# Using git+https (requires GH_TOKEN environment variable to be set)
+py_parallelizer @ git+https://github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0
 ```
 
-### Building a Wheel File
+**In pyproject.toml (for projects using PEP 621):**
+
+```toml
+[project]
+dependencies = [
+    "py_parallelizer @ git+https://github.com/jonathanvanleeuwen/py_parallelizer.git@v1.1.0",
+]
+```
+
+> **Note:** When installing from requirements.txt with a private repo, ensure your git credentials are configured (see Option 1, Step 2, Option B above).
+
+### Building a Wheel File Locally
 
 If you want to build a wheel file yourself:
 
 ```bash
+# Clone the repo first
+git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
+cd py_parallelizer
+
 # Using uv
 uv build
 
