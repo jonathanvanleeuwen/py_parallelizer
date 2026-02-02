@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.1 (2026-02-02)
+
+### Bug Fixes
+
+- Release package to private github repos
+  ([`5ec8304`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/5ec8304839acc24c7da4cb14cbb18045f6b9915d))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`0eb2d7f`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/0eb2d7f54211c3adeb109d83a72a640ce18ded8e))
+
+
 ## v1.1.0 (2026-02-02)
 
 ### Bug Fixes
