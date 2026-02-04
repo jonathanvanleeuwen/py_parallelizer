@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.8 (2026-02-04)
+
+### Bug Fixes
+
+- Repo name in cicd
+  ([`ad44626`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/ad44626eca8310cb4200a33930d64db9a7323fcc))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`d92fe7b`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/d92fe7bfef74b760076b0691175d9f609497de99))
+
+
 ## v1.1.7 (2026-02-04)
 
 ### Bug Fixes
