@@ -1,9 +1,15 @@
 name: Release Pipeline - Coverage, Versioning, and Package Distribution
+
 on:
   pull_request:
     branches:
       - main
     types: [closed]
+
+# Permissions for GITHUB_TOKEN (used for releases, not pushing)
+permissions:
+  contents: write
+  pull-requests: read
 
 jobs:
   coverage-report:
@@ -14,8 +20,8 @@ jobs:
       - name: Checkout repository with full history
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}  # PAT for pushing to protected branch
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -26,12 +32,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install flake8 pytest pytest-cov
-          pip install -e .
+          pip install -e ".[dev]"
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run tests and generate coverage report (all files)
         run: |
-          pytest --junitxml=pytest.xml --cov=src/py_parallelizer --cov-report=term-missing --cov-report=xml:coverage.xml tests/ | tee pytest-coverage.txt
+          pytest --junitxml=pytest.xml --cov=src/header_footer_detection --cov-report=term-missing --cov-report=xml:coverage.xml tests/ | tee pytest-coverage.txt
 
       - name: Extract coverage data for README badge
         id: coverageComment
@@ -43,38 +49,50 @@ jobs:
 
       - name: Update README with coverage badge HTML
         run: |
-          sed -i '/<!-- Pytest Coverage Comment:Begin -->/,/<!-- Pytest Coverage Comment:End -->/c\<!-- Pytest Coverage Comment:Begin -->\n\${{ steps.coverageComment.outputs.coverageHtml }}\n<!-- Pytest Coverage Comment:End -->' ./README.md
+          sed -i '/<!-- Pytest Coverage Comment:Begin -->/,/<!-- Pytest Coverage Comment:End -->/c\<!-- Pytest Coverage Comment:Begin -->\n${{ steps.coverageComment.outputs.coverageHtml }}\n<!-- Pytest Coverage Comment:End -->' ./README.md
 
       - name: Clean up temporary coverage files
         run: rm ./pytest-coverage.txt ./pytest.xml ./coverage.xml
 
       - name: Commit and push updated README with coverage
-        uses: actions-js/push@master
-        with:
-          message: Update coverage on Readme
-          github_token: ${{ secrets.SEM_RELEASE }}
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          git diff --staged --quiet || git commit -m "docs: update coverage report in README [skip ci]"
+          git push
 
   semantic-release:
     name: Create New Version Tag via Semantic Release
     needs: coverage-report
     if: ${{ github.event.pull_request.merged }}
     runs-on: ubuntu-latest
-    concurrency: release
 
     steps:
       - name: Checkout repository with full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.SEM_RELEASE }}
+          token: ${{ secrets.RELEASE_TOKEN }}  # PAT for pushing to protected branch
 
       - name: Pull latest changes from main
         run: git pull
 
-      - name: Analyze commits and create version tag
-        uses: relekang/python-semantic-release@master
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
         with:
-          github_token: ${{ secrets.SEM_RELEASE  }}
+          python-version: "3.12"
+
+      - name: Install python-semantic-release
+        run: pip install python-semantic-release
+
+      - name: Analyze commits and create version tag
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          semantic-release version
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
   build-and-publish:
     name: Build Wheel and Publish to GitHub Release
@@ -87,7 +105,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.SEM_RELEASE }}
+          token: ${{ secrets.RELEASE_TOKEN }}  # PAT for pushing to protected branch
 
       - name: Pull latest changes (includes new version tag)
         run: git pull origin main
@@ -110,7 +128,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add dist/*.whl
-          git commit -m "chore: update wheel to latest version [skip ci]" || echo "No changes to commit"
+          git diff --staged --quiet || git commit -m "chore: update wheel to latest version [skip ci]"
           git push
 
       - name: Get current version from git tag
@@ -118,7 +136,6 @@ jobs:
         run: |
           git fetch --tags
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          # Remove 'v' prefix if present to get clean version number
           VERSION_NUM=${LATEST_TAG#v}
           echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
           echo "version_num=$VERSION_NUM" >> $GITHUB_OUTPUT
@@ -128,7 +145,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
-          files: dist/py_parallelizer-${{ steps.get_version.outputs.version_num }}-py3-none-any.whl
+          files: dist/header_footer_detection-${{ steps.get_version.outputs.version_num }}-py3-none-any.whl
           fail_on_unmatched_files: true
         env:
-          GITHUB_TOKEN: ${{ secrets.SEM_RELEASE }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

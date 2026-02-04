@@ -1,0 +1,12 @@
+# CODEOWNERS - Require review for critical files
+# This file defines who must review and approve changes to specific files/directories
+
+# Workflow files - require owner approval for any changes
+# This prevents attackers from modifying workflows to abuse GITHUB_TOKEN bypass rights
+.github/workflows/** @jonathanvanleeuwen
+
+# CODEOWNERS file itself - prevent unauthorized modifications
+.github/CODEOWNERS @jonathanvanleeuwen
+
+# Security-related configuration files
+pyproject.toml @jonathanvanleeuwen
