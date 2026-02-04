@@ -145,7 +145,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
-          files: dist/header_footer_detection-${{ steps.get_version.outputs.version_num }}-py3-none-any.whl
+          files: dist/py_parallelizer-${{ steps.get_version.outputs.version_num }}-py3-none-any.whl
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
