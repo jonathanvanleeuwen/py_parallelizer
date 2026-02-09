@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.9 (2026-02-09)
+
+### Bug Fixes
+
+- Added custom copilot instructions
+  ([`10ccdf4`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/10ccdf4c313d5fe74fdb6ba96c3fc4b8b5105e88))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`e913ea4`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/e913ea4398ed37e7d41f621934e573620d588753))
+
+
 ## v1.1.8 (2026-02-04)
 
 ### Bug Fixes
