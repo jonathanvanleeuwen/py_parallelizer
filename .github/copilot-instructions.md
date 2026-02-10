@@ -76,6 +76,30 @@
 - Consistent naming conventions throughout the project
 - Code is read 10x more than written - optimize for reading
 
+### Development Tooling Standards
+
+**Python Version**
+- Follow Python syntax for the version specified in `pyproject.toml` (currently >=3.11)
+- Backwards compatibility is NOT required - use modern Python features
+
+**Package & Environment Management**
+- Use `uv` for all virtual environment operations
+- Always create venvs with: `uv venv .venv`
+- Install dependencies with: `uv pip install -e ".[dev]"`
+
+**Code Quality Tools**
+- **ruff**: Primary linter and formatter (replaces black, isort, flake8)
+  - Format code: `ruff format .`
+  - Check code: `ruff check .`
+  - Fix issues: `ruff check --fix .`
+- Follow ruff's formatting style (no manual formatting needed)
+
+**Testing**
+- **pytest**: Only testing framework to use
+- Always run tests in the `.venv` environment
+- Execute with: `pytest` (picks up config from pyproject.toml)
+- Coverage reports generated in `reports/htmlcov/`
+
 ### Meta-Instruction
 **Keep these instructions updated** based on chat interactions when patterns emerge or decisions are made that should guide future development.
 
@@ -195,17 +219,25 @@ if __name__ == "__main__":
 
 **Setup**
 ```bash
-python -m venv .venv
-pip install -e ".[dev]"
-pre-commit install
-pre-commit run --all-files
+uv venv .venv                    # Create virtual environment with uv
+uv pip install -e ".[dev]"      # Install package and dev dependencies
+pre-commit install              # Install pre-commit hooks
+pre-commit run --all-files      # Run hooks on all files
+```
+
+**Code Quality**
+```bash
+ruff format .                   # Format all code
+ruff check .                    # Check for issues
+ruff check --fix .              # Auto-fix issues
 ```
 
 **Testing**
 ```bash
-pytest                          # Run with coverage report in reports/htmlcov/
+pytest                          # Run all tests with coverage (reports/htmlcov/)
 pytest tests/unit/              # Unit tests only
 pytest tests/integration/       # Integration tests only
+pytest -v                       # Verbose output
 ```
 
 **Distribution**
