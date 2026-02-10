@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v1.1.10 (2026-02-10)
+
+### Bug Fixes
+
+- Update_instructions
+  ([`03ca63d`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/03ca63d0d12a374f8c073b5931f81ceec1461a7b))
+
+### Chores
+
+- Update wheel to latest version [skip ci]
+  ([`e3c30c2`](https://github.com/jonathanvanleeuwen/py_parallelizer/commit/e3c30c23db7503a58ffb2fe2d8e5d553a0637002))
+
+
 ## v1.1.9 (2026-02-09)
 
 ### Bug Fixes
