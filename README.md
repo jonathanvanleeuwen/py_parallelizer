@@ -142,11 +142,15 @@ uv pip install py_parallelizer/dist/py_parallelizer-1.1.0-py3-none-any.whl
 git clone https://github.com/jonathanvanleeuwen/py_parallelizer.git
 cd py_parallelizer
 
-# Install using pip
-pip install .
+# Create virtual environment with uv
+uv venv .venv
+# Activate: Windows: .venv\Scripts\activate | Unix: source .venv/bin/activate
+
+# Install using uv
+uv pip install .
 
 # Or install in editable/development mode
-pip install -e ".[dev]"
+uv pip install -e ".[dev]"
 ```
 
 ### Option 4: Add to requirements.txt or pyproject.toml
